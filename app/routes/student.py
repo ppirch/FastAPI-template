@@ -1,12 +1,14 @@
-from fastapi import APIRouter, Body
+from fastapi import APIRouter, Body, Depends
 from fastapi.encoders import jsonable_encoder
 
 from database.database import *
 from models.student import *
+from auth.jwt_bearer import JWTBearer
 
 router = APIRouter()
 
 
+token_listener = JWTBearer()
 @router.get("/", response_description="Students retrieved")
 async def get_students():
     students = await retrieve_students()
@@ -24,14 +26,14 @@ async def get_student_data(id):
         else ErrorResponseModel("An error occured.", 404, "Student doesn't exist.")
 
 
-@router.post("/", response_description="Student data added into the database")
+@router.post("/", response_description="Student data added into the database", dependencies=[Depends(token_listener)])
 async def add_student_data(student: StudentModel = Body(...)):
     student = jsonable_encoder(student)
     new_student = await add_student(student)
     return ResponseModel(new_student, "Student added successfully.")
 
 
-@router.delete("/{id}", response_description="Student data deleted from the database")
+@router.delete("/{id}", response_description="Student data deleted from the database", dependencies=[Depends(token_listener)])
 async def delete_student_data(id: str):
     deleted_student = await delete_student(id)
     return ResponseModel("Student with ID: {} removed".format(id), "Student deleted successfully") \
@@ -39,7 +41,7 @@ async def delete_student_data(id: str):
         else ErrorResponseModel("An error occured", 404, "Student with id {0} doesn't exist".format(id))
 
 
-@router.put("{id}")
+@router.put("{id}", dependencies=[Depends(token_listener)])
 async def update_student(id: str, req: UpdateStudentModel = Body(...)):
     updated_student = await update_student_data(id, req.dict())
     return ResponseModel("Student with ID: {} name update is successful".format(id),
