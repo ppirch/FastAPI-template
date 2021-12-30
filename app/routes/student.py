@@ -1,14 +1,21 @@
 from fastapi import APIRouter, Body, Depends
 from fastapi.encoders import jsonable_encoder
 
+from fastapi_pagination import Page
+
 from database.database import *
 from models.student import *
 from auth.jwt_bearer import JWTBearer
 
+
 router = APIRouter()
 
-
 token_listener = JWTBearer()
+
+@router.get("/default", response_model=Page[StudentModel])
+async def get_students_pagination():
+    return await retrieve_students_pagination()
+
 @router.get("/", response_description="Students retrieved")
 async def get_students():
     students = await retrieve_students()

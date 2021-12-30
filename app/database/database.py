@@ -4,6 +4,8 @@ from decouple import config
 
 from .database_helper import student_helper, admin_helper
 
+from fastapi_pagination.ext.motor import paginate
+
 MONGO_ROOT_USER=config('MONGO_ROOT_USER')
 MONGO_ROOT_PASSWORD=config('MONGO_ROOT_PASSWORD')
 MONGO_URL = f"mongodb://{MONGO_ROOT_USER}:{MONGO_ROOT_PASSWORD}@mongo:27017/"
@@ -19,6 +21,9 @@ async def add_admin(admin_data: dict) -> dict:
     admin = await admin_collection.insert_one(admin_data)
     new_admin = await admin_collection.find_one({"_id": admin.inserted_id})
     return admin_helper(new_admin)
+
+async def retrieve_students_pagination():
+    return await paginate(student_collection)
 
 async def retrieve_students():
     students = []
